@@ -2,36 +2,18 @@
 {% load static %}
 {% block content %}
     <div class="row">
-        <div class="col-lg-4">
-            <img class="thumbnail" src="{% static 'images/placeholder.png' %}" alt="Placeholder Image">
-            <div class="box-element product">
-                <h6 class="font-weight-bold">Product</h6>
-                <hr>
-                <button class="btn btn-outline-secondary">Add to Cart</button>
-                <a class="btn btn-outline-success" href="#">View</a>
-                <h4 class="price">$20</h4>
+        {% for product in products %}
+            <div class="col-lg-4">
+                <img class="thumbnail" src="{{ product.imageURL }}" alt="Placeholder Image">
+                <div class="box-element product">
+                    <h6 class="font-weight-bold">{{ product.name }}</h6>
+                    <hr>
+                    <button class="btn btn-outline-secondary">Add to Cart</button>
+                    <a class="btn btn-outline-success" href="#">View</a>
+                    <h4 class="price">${{ product.price }}</h4>
+                </div>
             </div>
-        </div>
-        <div class="col-lg-4">
-            <img class="thumbnail" src="{% static 'images/placeholder.png' %}" alt="Placeholder Image">
-            <div class="box-element product">
-                <h6 class="font-weight-bold">Product</h6>
-                <hr>
-                <button class="btn btn-outline-secondary">Add to Cart</button>
-                <a class="btn btn-outline-success" href="#">View</a>
-                <h4 class="price">$20</h4>
-            </div>
-        </div>
-        <div class="col-lg-4">
-            <img class="thumbnail" src="{% static 'images/placeholder.png' %}" alt="Placeholder Image">
-            <div class="box-element product">
-                <h6 class="font-weight-bold">Product</h6>
-                <hr>
-                <button class="btn btn-outline-secondary">Add to Cart</button>
-                <a class="btn btn-outline-success" href="#">View</a>
-                <h4 class="price">$20</h4>
-            </div>
-        </div>
+        {% endfor %}
     </div>
 {% endblock content %}
 

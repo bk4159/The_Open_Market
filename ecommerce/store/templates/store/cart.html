@@ -11,8 +11,8 @@
 
                 <table class="table">
                     <tr>
-                        <th><h5>Items: <span class="font-weight-bold">3</span></h5></th>
-                        <th><h5>Total: <span class="font-weight-bold">$43</span></h5></th>
+                        <th><h5>Items: <span class="font-weight-bold">{{ order.getCartItems }}</span></h5></th>
+                        <th><h5>Total: <span class="font-weight-bold">${{ order.getCartTotal }}</span></h5></th>
                         <th>
                             <a class="btn btn-success checkout" href="{% url 'checkout' %}">Checkout</a>
                         </th>
@@ -30,20 +30,22 @@
                     <div class="s-cart-item font-weight-bold">Quantity</div>
                     <div class="s-cart-item font-weight-bold">Total</div>
                 </div>
-
+                
+                {% for item in items %}
                 <div class="cart-row">
-                    <div class="l-cart-item"><img class="row-image" src="{% static 'images/placeholder.png' %}" alt="Cart Item"></div>
-                    <div class="l-cart-item">Product 1</div>
-                    <div class="s-cart-item">$20</div>
+                    <div class="l-cart-item"><img class="row-image" src="{{ item.product.imageURL }}" alt="Cart Item"></div>
+                    <div class="l-cart-item">{{ item.product.name }}</div>
+                    <div class="s-cart-item">${{ item.product.price }}</div>
                     <div class="s-cart-item">
-                        <p class="quantity">2</p>
+                        <p class="quantity">{{ item.quantity }}</p>
                         <div class="quantity">
                             <img class="chg-quantity" src="{% static 'images/arrow-up.png' %}" alt="Increase Quantity">
                             <img class="chg-quantity" src="{% static 'images/arrow-down.png' %}" alt="Decrease Quantity">
                         </div>
                     </div>
-                    <div class="s-cart-item">$40</div>
+                    <div class="s-cart-item">${{ item.getTotal }}</div>
                 </div>
+                {% endfor %}
             </div>
         </div>
     </div>
