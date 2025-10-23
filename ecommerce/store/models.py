@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class Customer(models.Model):
+    #User is a predefined model in django for authentication
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     name = models.CharField(max_length=200, null=True)
     email = models.CharField(max_length=200, null=True)
@@ -36,8 +37,21 @@ class Order(models.Model):
     transaction_id = models.CharField(max_length=200, null=True)
     
     def __str__(self):
+        #id is an attribute of OrderItem model, and automatically an instance variable of this class
         return str(self.id)
     
+    @property
+    def requiresShipping(self):
+        """
+        Check if the order requires shipping.
+        """
+        requires_shipping = False
+        orderItems = self.orderitem_set.all()
+        for item in orderItems:
+            if not item.product.digital:
+                requires_shipping = True
+        return requires_shipping
+
     @property
     def getCartTotal(self):
         """
@@ -47,6 +61,7 @@ class Order(models.Model):
         total = sum([item.getTotal for item in orderitems])
         return total
     
+    # TODO: change name to getTotalItems
     @property
     def getCartItems(self):
         """
@@ -63,6 +78,7 @@ class OrderItem(models.Model):
     date_added = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
+        #id is a default primary key (instance variable) of model class
         return str(self.id)
     
     @property

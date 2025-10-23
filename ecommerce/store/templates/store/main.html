@@ -6,6 +6,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}">
+
+    <script type="text/javascript">
+        const user = "{{request.user}}";
+
+        //parse a cookie from the cookies in the browser (from https://docs.djangoproject.com/en/5.2/howto/csrf/#using-csrf-protection-with-ajax)
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken');
+        
+        let cart = JSON.parse(getCookie('cart'));
+        if (!cart) {
+            console.log('Cart cookie not found, creating empty cart');
+            cart = {};
+            //save add empty cart cookie to cookies, and set the path the cookie will be sent to to root
+            //  and set domain to current domain only (subdomains won't get the cookie)
+            document.cookie = "cart=" + JSON.stringify(cart) + ";domain=;path=/";
+        }
+
+    </script>
     <title>Ecom</title>
 </head>
 <body>
@@ -27,7 +59,7 @@
                 <a href="{% url 'cart' %}">
                     <img  id="cart-icon" src="{% static 'images/cart.png' %}" alt="Cart Icon">
                 </a>
-                <p id="cart-total">0</p>
+                <p id="cart-total">{{ cartItems }}</p>
             </div>
         </div>
     </nav>
@@ -46,5 +78,6 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js" integrity="sha384-+sLIOodYLS7CIrQpBjl+C7nPvqq+FbNUBDunl/OZv93DB7Ln/533i8e/mZXLi/P+" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="{% static 'js/cart.js' %}"></script>
 </body>
 </html>
