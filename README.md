@@ -3,12 +3,12 @@ An Ecommerce website created using Python.
 
 ## How to run the application
 ### 1) create & activate a virtual env
-cd ecommerce
+cd ecommerce   
 python -m venv venv  
   
-Windows:  
+*Windows:*  
 venv\Scripts\activate  
-macOS / Linux:  
+*macOS / Linux:*  
 source venv/bin/activate
 
 ### 2) install Django and Pillow (ImageField requires Pillow)
