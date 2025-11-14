@@ -1,0 +1,54 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+    <!-- TODO: change HTML title based on current html page (ie: add "| Cart" for current HTML) -->
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="box-element">
+                <a class="btn btn-outline-dark" href="{% url 'store' %}">&#x2190; Continue Shopping</a>
+
+                <br>
+                <br>
+
+                <table class="table">
+                    <tr>
+                        <th><h5>Items: <span class="font-weight-bold">{{ order.getCartItems }}</span></h5></th>
+                        <th><h5>Total: <span class="font-weight-bold">${{ order.getCartTotal }}</span></h5></th>
+                        <th>
+                            <a class="btn btn-success checkout" href="{% url 'checkout' %}">Checkout</a>
+                        </th>
+                    </tr>
+                </table>
+            </div>
+
+            <br>
+
+            <div class="box-element">
+                <div class="cart-row">
+                    <div class="l-cart-item"></div>
+                    <div class="l-cart-item font-weight-bold">Item</div>
+                    <div class="s-cart-item font-weight-bold">Price</div>
+                    <div class="s-cart-item font-weight-bold">Quantity</div>
+                    <div class="s-cart-item font-weight-bold">Total</div>
+                </div>
+                
+                {% for item in items %}
+                <div class="cart-row">
+                    <div class="l-cart-item"><img class="row-image" src="{{ item.product.imageURL }}" alt="Cart Item"></div>
+                    <div class="l-cart-item">{{ item.product.name }}</div>
+                    <div class="s-cart-item">${{ item.product.price }}</div>
+                    <div class="s-cart-item">
+                        <p class="quantity">{{ item.quantity }}</p>
+                        <div class="quantity">
+                            <!-- TODO: make easier to mass add to cart (ie: quantity can be manually inputted) -->
+                            <img data-productId="{{ item.product.id }}" data-action="add" class="chg-quantity update-cart" src="{% static 'images/arrow-up.png' %}" alt="Increase Quantity">
+                            <img data-productId="{{ item.product.id }}" data-action="remove" class="chg-quantity update-cart" src="{% static 'images/arrow-down.png' %}" alt="Decrease Quantity">
+                        </div>
+                    </div>
+                    <div class="s-cart-item">${{ item.getTotal }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock content %}

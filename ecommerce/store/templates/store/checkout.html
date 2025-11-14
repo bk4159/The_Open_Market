@@ -1,0 +1,223 @@
+{% extends 'store/main.html' %}
+{% load static %}
+{% block content %}
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="box-element" id="form-wrapper">
+                <form id="form">
+                    {% csrf_token %}
+                    <div id="user-info">
+                        <div class="form-field">
+							<input required class="form-control" type="text" autocomplete="name" name="name" placeholder="Name..">
+						</div>
+						<div class="form-field">
+							<input required class="form-control" type="email" autocomplete="email" name="email" placeholder="Email..">
+						</div>
+                    </div>
+                    <div id="shipping-info">
+                        <hr>
+						<p>Shipping Information:</p>
+						<hr>
+						<div class="form-field">
+							<input required class="form-control" type="text" autocomplete="street-address" name="address" placeholder="Address..">
+						</div>
+						<div class="form-field">
+							<input required class="form-control" type="text" autocomplete="address-level2" name="city" placeholder="City..">
+						</div>
+						<div class="form-field">
+							<input required class="form-control" type="text" autocomplete="address-level1" name="state" placeholder="State/Province/Region..">
+						</div>
+						<div class="form-field">
+							<input required class="form-control" type="text" autocomplete="postal-code" name="zipcode" placeholder="Zip/Postal code..">
+						</div>
+						<div class="form-field">
+							<input required class="form-control" type="text" autocomplete="country-name" name="country" placeholder="Country..">
+						</div>
+                    </div>
+
+                    <hr>
+                    <input id="form-button" class="btn btn-success btn-block" type="submit" value="Continue">
+                </form>
+            </div>
+            <br>
+
+            <div class="box-element hidden" id="payment-info">
+                <small>Paypal options</small>
+                <div id="paypal-button-container"></div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="box-element">
+                <a class="btn btn-outline-dark" href="{% url 'cart' %}">&#x2190; Back to Cart</a>
+                <hr>
+                <h3>Order Summary</h3>
+                <hr>
+                
+                {% for item in items %}
+                <div class="cart-row">
+                    <div class="l-cart-item"><img class="row-image" src="{{ item.product.imageURL }}" alt="Cart Item"></div>
+                    <div class="l-cart-item"><p>{{ item.product.name }}</p></div>
+                    <div class="s-cart-item"><p>${{ item.product.price }}</p></div>
+                    <div class="s-cart-item"><p>x{{ item.quantity }}</p></div>
+                </div>
+                {% endfor %}
+
+                <h5>Items: {{ order.getCartItems }}</h5>
+                <h5>Total: ${{ order.getCartTotal }}</h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- TODO: use environment variable for client-id in url -->
+    <script src="https://www.paypal.com/sdk/js?client-id=AQ8OWpQFXcnU6i81iAgKs8ojhWfFCYNR7juQngBRYhDGrcQlcmUDvaQ8JbxHlA3W3r738PyYkKD_TEft&disable-funding=credit,card&currency=CAD"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // TODO: form validation
+            function submitFormData() {
+                //change csrf token retrieval to use hidden input field
+                const new_csrf_token =  document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const requiresShipping = "{{ order.requiresShipping }}";
+                const total = "{{ order.getCartTotal }}";
+                const form = document.getElementById('form');
+
+                //submit form data to server
+                console.log('Submitting form data to server');
+
+                const userFormData = {
+                    'name': null,
+                    'email': null,
+                    'total': total
+                }
+
+                const shippingFormData = {
+                    'address': null,
+                    'city': null,
+                    'state': null,
+                    'zipcode': null,
+                    'country': null
+                }
+
+                if (requiresShipping == 'True') {
+                    shippingFormData.address = form.address.value;
+                    shippingFormData.city = form.city.value;
+                    shippingFormData.state = form.state.value;
+                    shippingFormData.zipcode = form.zipcode.value;
+                    shippingFormData.country = form.country.value;
+                }
+
+                if (user == 'AnonymousUser') {
+                    userFormData.name = form.name.value;
+                    userFormData.email = form.email.value;
+                }
+                
+                //send data to server
+                const url = '/process_order/';
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': new_csrf_token
+                    },
+                    body: JSON.stringify({'userFormData': userFormData, 'shippingFormData': shippingFormData})
+                }).then((response) => {
+                    return response.json();
+                }).then((data) => {
+                    console.log('Payment complete!');
+                    alert('Payment complete!');
+
+                    //clear cart cookie whether logged in or not
+                    document.cookie = 'cart={};domain=;path=/';
+                    //redirect to home page
+                    window.location.href = "{% url 'store' %}";
+                });
+            }
+
+            //Paypal integration
+            paypal.Buttons({
+                style: {
+                    color:  'blue',
+                    shape:  'rect'
+                },
+                //set up the transaction
+                createOrder: function(data, actions) {
+                    console.log('Creating PayPal order...');
+                    //change csrf token retrieval to use hidden input field
+                    const new_csrf_token =  document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const total = "{{ order.getCartTotal }}";
+
+                    return fetch('/process_paypal_order/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': new_csrf_token
+                        },
+                        body: JSON.stringify({'total': total})
+                    }).then(function(res) {
+                        return res.json();
+                    }).then(function(orderData) {
+                        return orderData.id;
+                    });
+                },
+                //finalize the transaction
+                onApprove: function(data, actions) {
+                    //change csrf token retrieval to use hidden input field
+                    const new_csrf_token =  document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    
+                    return fetch('/capture_paypal_order/' + data.orderID + '/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': new_csrf_token
+                        }
+                    }).then(function(res) {
+                        return res.json();
+                    }).then(function(orderData) {
+                        // return error from server if error occurred
+                        if (orderData['error']) {
+                            // TODO: don't use alert in production environment
+                            return alert('Sorry, your transaction could not be processed.' + '\n\n' + orderData['error']);
+                        }
+                        submitFormData();
+                    });
+                },
+            }).render('#paypal-button-container'); //Render the PayPal button into #paypal-button-container
+        });
+    </script>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            //handle form functionality
+            const requiresShipping = "{{ order.requiresShipping }}";
+            const total = "{{ order.getCartTotal }}";
+            
+            //hide shipping info if not required
+            if (requiresShipping == 'False') {
+                document.getElementById('shipping-info').innerHTML = '';
+            }
+
+            //hide user info if user is logged in
+            if (user != 'AnonymousUser') {
+                document.getElementById('user-info').innerHTML = '';
+            }
+
+            //automatically skip to payment info if no shipping required and user is logged in
+            if (requiresShipping == 'False' && user != 'AnonymousUser') {
+                document.getElementById('form-wrapper').classList.add('hidden');
+                document.getElementById('payment-info').classList.remove('hidden');
+            }
+
+            //handle form submission
+            const form = document.getElementById('form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('Form submitted, proceeding to payment info');
+
+                //hide user info and show payment info
+                document.getElementById('form-button').classList.add('hidden');
+                document.getElementById('payment-info').classList.remove('hidden');
+            });
+        });
+    </script>
+{% endblock content %}
