@@ -43,7 +43,7 @@
 
             <div class="box-element hidden" id="payment-info">
                 <small>Paypal options</small>
-                <button id="make-payment" class="btn btn-primary btn-block">Pay with Paypal</button>
+                <div id="paypal-button-container"></div>
             </div>
         </div>
 
@@ -69,48 +69,17 @@
         </div>
     </div>
 
-    <script type="text/javascript">
+    <script src="https://www.paypal.com/sdk/js?client-id=AQ8OWpQFXcnU6i81iAgKs8ojhWfFCYNR7juQngBRYhDGrcQlcmUDvaQ8JbxHlA3W3r738PyYkKD_TEft&disable-funding=credit,card&currency=CAD"></script>
+
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const requiresShipping = "{{ order.requiresShipping }}";
-            const total = "{{ order.getCartTotal }}";
-            
-            //hide shipping info if not required
-            if (requiresShipping == 'False') {
-                document.getElementById('shipping-info').innerHTML = '';
-            }
-
-            //hide user info if user is logged in
-            if (user != 'AnonymousUser') {
-                document.getElementById('user-info').innerHTML = '';
-            }
-
-            //automatically skip to payment info if no shipping required and user is logged in
-            if (requiresShipping == 'False' && user != 'AnonymousUser') {
-                document.getElementById('form-wrapper').classList.add('hidden');
-                document.getElementById('payment-info').classList.remove('hidden');
-            }
-
-            //handle form submission
-            const form = document.getElementById('form');
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log('Form submitted, proceeding to payment info');
-
-                //hide user info and show payment info
-                document.getElementById('form-button').classList.add('hidden');
-                document.getElementById('payment-info').classList.remove('hidden');
-            });
-            document.getElementById('make-payment').addEventListener('click', (e) => {
-                console.log('Making payment...');
-
-                //submit form data to server
-                submitFormData();
-            });
-
             // TODO: form validation
             function submitFormData() {
                 //change csrf token retrieval to use hidden input field
                 const new_csrf_token =  document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const requiresShipping = "{{ order.requiresShipping }}";
+                const total = "{{ order.getCartTotal }}";
+                const form = document.getElementById('form');
 
                 //submit form data to server
                 console.log('Submitting form data to server');
@@ -150,7 +119,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': new_csrf_token
                     },
-                    body: JSON.stringify({'userFormData': userFormData, 'shippingFormData': shippingFormData}),
+                    body: JSON.stringify({'userFormData': userFormData, 'shippingFormData': shippingFormData})
                 }).then((response) => {
                     return response.json();
                 }).then((data) => {
@@ -163,6 +132,91 @@
                     window.location.href = "{% url 'store' %}";
                 });
             }
+
+            //Paypal integration
+            paypal.Buttons({
+                style: {
+                    color:  'blue',
+                    shape:  'rect'
+                },
+                //set up the transaction
+                createOrder: function(data, actions) {
+                    console.log('Creating PayPal order...');
+                    //change csrf token retrieval to use hidden input field
+                    const new_csrf_token =  document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    const total = "{{ order.getCartTotal }}";
+
+                    return fetch('/process_paypal_order/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': new_csrf_token
+                        },
+                        body: JSON.stringify({'total': total})
+                    }).then(function(res) {
+                        return res.json();
+                    }).then(function(orderData) {
+                        return orderData.id;
+                    });
+                },
+                //finalize the transaction
+                onApprove: function(data, actions) {
+                    //change csrf token retrieval to use hidden input field
+                    const new_csrf_token =  document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    
+                    return fetch('/capture_paypal_order/' + data.orderID + '/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': new_csrf_token
+                        }
+                    }).then(function(res) {
+                        return res.json();
+                    }).then(function(orderData) {
+                        // return error from server if error occurred
+                        if (orderData['error']) {
+                            // TODO: don't use alert in production environment
+                            return alert('Sorry, your transaction could not be processed.' + '\n\n' + orderData['error']);
+                        }
+                        submitFormData();
+                    });
+                },
+            }).render('#paypal-button-container'); //Render the PayPal button into #paypal-button-container
+        });
+    </script>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            //handle form functionality
+            const requiresShipping = "{{ order.requiresShipping }}";
+            const total = "{{ order.getCartTotal }}";
+            
+            //hide shipping info if not required
+            if (requiresShipping == 'False') {
+                document.getElementById('shipping-info').innerHTML = '';
+            }
+
+            //hide user info if user is logged in
+            if (user != 'AnonymousUser') {
+                document.getElementById('user-info').innerHTML = '';
+            }
+
+            //automatically skip to payment info if no shipping required and user is logged in
+            if (requiresShipping == 'False' && user != 'AnonymousUser') {
+                document.getElementById('form-wrapper').classList.add('hidden');
+                document.getElementById('payment-info').classList.remove('hidden');
+            }
+
+            //handle form submission
+            const form = document.getElementById('form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('Form submitted, proceeding to payment info');
+
+                //hide user info and show payment info
+                document.getElementById('form-button').classList.add('hidden');
+                document.getElementById('payment-info').classList.remove('hidden');
+            });
         });
     </script>
 {% endblock content %}

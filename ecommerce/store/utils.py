@@ -57,7 +57,6 @@ def get_cart_data(request):
     return {'cartItems': cartItems, 'order': order, 'items': items}
 
 def process_guest_order(request, data):
-    print('Cookies:', request.COOKIES)
     user_form_data = data['userFormData']
     
     #get data from cookie for guest user

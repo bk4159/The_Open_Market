@@ -11,8 +11,8 @@ venv\Scripts\activate
 *macOS / Linux:*  
 source venv/bin/activate
 
-### 2) install Django and Pillow (ImageField requires Pillow)
-pip install django pillow
+### 2) install required dependencies
+pip install -r requirements.txt
 
 ### 3) apply DB migrations
 python manage.py migrate

@@ -39,6 +39,7 @@
                     <div class="s-cart-item">
                         <p class="quantity">{{ item.quantity }}</p>
                         <div class="quantity">
+                            <!-- TODO: make easier to mass add to cart (ie: quantity can be manually inputted) -->
                             <img data-productId="{{ item.product.id }}" data-action="add" class="chg-quantity update-cart" src="{% static 'images/arrow-up.png' %}" alt="Increase Quantity">
                             <img data-productId="{{ item.product.id }}" data-action="remove" class="chg-quantity update-cart" src="{% static 'images/arrow-down.png' %}" alt="Decrease Quantity">
                         </div>
