@@ -106,6 +106,7 @@ def processOrder(request):
 
     return JsonResponse("Payment complete!", safe=False)
 
+# TODO: refactor repeated code for obtaining access token
 #API endpoint to create PayPal order
 def processPaypalOrder(request):
     data = json.loads(request.body)
